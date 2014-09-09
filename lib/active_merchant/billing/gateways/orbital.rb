@@ -238,6 +238,10 @@ module ActiveMerchant #:nodoc:
         commit(order, :void, options[:trace_number])
       end
 
+      def end_of_day(options = {})
+        commit(build_end_of_day_xml(options), :end_of_day)
+      end
+
 
       # ==== Customer Profiles
       # :customer_ref_num should be set unless your happy with Orbital providing one
@@ -476,7 +480,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response, message_type)
-        if [:refund, :void].include?(message_type)
+        if [:refund, :void, :end_of_day].include?(message_type)
           response[:proc_status] == SUCCESS
         elsif response[:customer_profile_action]
           response[:profile_proc_status] == SUCCESS
@@ -580,6 +584,16 @@ module ActiveMerchant #:nodoc:
           end
         end
         xml.target!
+      end
+
+      def build_end_of_day_xml(parameters = {})
+        xml = xml_envelope
+        xml.tag! :Request do
+          xml.tag! :EndOfDay do
+            add_xml_credentials(xml)
+            add_bin_merchant_and_terminal(xml, parameters)
+          end
+        end
       end
 
       def currency_code(currency)
